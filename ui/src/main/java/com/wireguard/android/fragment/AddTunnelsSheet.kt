@@ -12,13 +12,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.zxing.integration.android.IntentIntegrator
 import com.wireguard.android.R
 import com.wireguard.android.activity.TunnelCreatorActivity
-import com.wireguard.android.util.requireTargetFragment
+import com.wireguard.android.fragment.TunnelListFragment.Companion.FRAGMENT_OPERATION_IMPORT_CONFIG
+import com.wireguard.android.fragment.TunnelListFragment.Companion.FRAGMENT_OPERATION_SCAN_QR_CODE
+import com.wireguard.android.fragment.TunnelListFragment.Companion.FRAGMENT_RESULT_KEY
+import com.wireguard.android.fragment.TunnelListFragment.Companion.FRAGMENT_RESULT_OPERATION_KEY
 import com.wireguard.android.util.resolveAttribute
 
 class AddTunnelsSheet : BottomSheetDialogFragment() {
@@ -62,11 +66,11 @@ class AddTunnelsSheet : BottomSheetDialogFragment() {
                 }
                 dialog.findViewById<View>(R.id.create_from_file)?.setOnClickListener {
                     dismiss()
-                    onRequestImportConfig()
+                    setFragmentResult(FRAGMENT_RESULT_KEY, bundleOf(FRAGMENT_RESULT_OPERATION_KEY to FRAGMENT_OPERATION_IMPORT_CONFIG))
                 }
                 dialog.findViewById<View>(R.id.create_from_qrcode)?.setOnClickListener {
                     dismiss()
-                    onRequestScanQRCode()
+                    setFragmentResult(FRAGMENT_RESULT_KEY, bundleOf(FRAGMENT_RESULT_OPERATION_KEY to FRAGMENT_OPERATION_SCAN_QR_CODE))
                 }
             }
         })
@@ -83,22 +87,5 @@ class AddTunnelsSheet : BottomSheetDialogFragment() {
 
     private fun onRequestCreateConfig() {
         startActivity(Intent(activity, TunnelCreatorActivity::class.java))
-    }
-
-    private fun onRequestImportConfig() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "*/*"
-        }
-        requireTargetFragment().startActivityForResult(intent, TunnelListFragment.REQUEST_IMPORT)
-    }
-
-    private fun onRequestScanQRCode() {
-        val integrator = IntentIntegrator.forSupportFragment(requireTargetFragment()).apply {
-            setOrientationLocked(false)
-            setBeepEnabled(false)
-            setPrompt(getString(R.string.qr_code_hint))
-        }
-        integrator.initiateScan(listOf(IntentIntegrator.QR_CODE))
     }
 }

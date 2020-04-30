@@ -21,6 +21,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.fragment.app.setFragmentResultListener
 import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.integration.android.IntentIntegrator
 import com.wireguard.android.Application
@@ -168,16 +169,6 @@ class TunnelListFragment : BaseFragment() {
         }
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        if (savedInstanceState != null) {
-            val checkedItems = savedInstanceState.getIntegerArrayList(CHECKED_ITEMS)
-            if (checkedItems != null) {
-                for (i in checkedItems) actionModeListener.setItemChecked(i, true)
-            }
-        }
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             REQUEST_IMPORT -> {
@@ -195,6 +186,37 @@ class TunnelListFragment : BaseFragment() {
         }
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (savedInstanceState != null) {
+            val checkedItems = savedInstanceState.getIntegerArrayList(CHECKED_ITEMS)
+            if (checkedItems != null) {
+                for (i in checkedItems) actionModeListener.setItemChecked(i, true)
+            }
+        }
+        setFragmentResultListener(FRAGMENT_RESULT_KEY) { key, bundle ->
+            if (key != FRAGMENT_RESULT_KEY) return@setFragmentResultListener
+            bundle.getString(FRAGMENT_RESULT_OPERATION_KEY)?.let { op ->
+                when (op) {
+                    FRAGMENT_OPERATION_SCAN_QR_CODE -> {
+                        IntentIntegrator.forSupportFragment(this).apply {
+                            setOrientationLocked(false)
+                            setBeepEnabled(false)
+                            setPrompt(getString(R.string.qr_code_hint))
+                        }.initiateScan(listOf(IntentIntegrator.QR_CODE))
+                    }
+                    FRAGMENT_OPERATION_IMPORT_CONFIG -> {
+                        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "*/*"
+                        }
+                        startActivityForResult(intent, REQUEST_IMPORT)
+                    }
+                }
+            }
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -203,7 +225,6 @@ class TunnelListFragment : BaseFragment() {
         binding?.apply {
             createFab.setOnClickListener {
                 val bottomSheet = AddTunnelsSheet()
-                bottomSheet.setTargetFragment(fragment, REQUEST_TARGET_FRAGMENT)
                 bottomSheet.show(parentFragmentManager, "BOTTOM_SHEET")
             }
             executePendingBindings()
@@ -423,8 +444,11 @@ class TunnelListFragment : BaseFragment() {
     }
 
     companion object {
-        const val REQUEST_IMPORT = 1
-        private const val REQUEST_TARGET_FRAGMENT = 2
+        private const val REQUEST_IMPORT = 1
+        const val FRAGMENT_RESULT_KEY = "add_tunnels_sheet"
+        const val FRAGMENT_RESULT_OPERATION_KEY = "operation"
+        const val FRAGMENT_OPERATION_SCAN_QR_CODE = "scan_qr_code"
+        const val FRAGMENT_OPERATION_IMPORT_CONFIG = "create_config"
         private const val CHECKED_ITEMS = "CHECKED_ITEMS"
         private const val TAG = "WireGuard/TunnelListFragment"
     }
