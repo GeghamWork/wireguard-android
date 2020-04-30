@@ -21,6 +21,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
 import com.google.android.material.snackbar.Snackbar
 import com.google.zxing.integration.android.IntentIntegrator
@@ -194,7 +195,7 @@ class TunnelListFragment : BaseFragment() {
                 for (i in checkedItems) actionModeListener.setItemChecked(i, true)
             }
         }
-        setFragmentResultListener(FRAGMENT_RESULT_KEY) { key, bundle ->
+        childFragmentManager.setFragmentResultListener(FRAGMENT_RESULT_KEY, viewLifecycleOwner) { key, bundle ->
             if (key != FRAGMENT_RESULT_KEY) return@setFragmentResultListener
             bundle.getString(FRAGMENT_RESULT_OPERATION_KEY)?.let { op ->
                 when (op) {

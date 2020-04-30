@@ -17,6 +17,7 @@ import androidx.fragment.app.setFragmentResult
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.zxing.integration.android.IntentIntegrator
 import com.wireguard.android.R
 import com.wireguard.android.activity.TunnelCreatorActivity
 import com.wireguard.android.fragment.TunnelListFragment.Companion.FRAGMENT_OPERATION_IMPORT_CONFIG
@@ -66,6 +67,12 @@ class AddTunnelsSheet : BottomSheetDialogFragment() {
                 }
                 dialog.findViewById<View>(R.id.create_from_file)?.setOnClickListener {
                     dismiss()
+                    val intent = IntentIntegrator.forSupportFragment(this@AddTunnelsSheet).apply {
+                        setOrientationLocked(false)
+                        setBeepEnabled(false)
+                        setPrompt(getString(R.string.qr_code_hint))
+                        setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+                    }.createScanIntent()
                     setFragmentResult(FRAGMENT_RESULT_KEY, bundleOf(FRAGMENT_RESULT_OPERATION_KEY to FRAGMENT_OPERATION_IMPORT_CONFIG))
                 }
                 dialog.findViewById<View>(R.id.create_from_qrcode)?.setOnClickListener {
