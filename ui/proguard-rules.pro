@@ -10,5 +10,10 @@
     public <init>();
 }
 
+-keep public class androidx.security.crypto.EncryptedFile$FileEncryptionScheme {
+    public <init>();
+    public field **;
+}
+
 # Don't obfuscate
 -dontobfuscate
